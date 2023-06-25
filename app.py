@@ -6,6 +6,7 @@ import openai
 
 openai_engines = ["text-davinci-003", "code-davinci-002", "text-curie-001"]
 prompt = "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\nHuman: Hello, who are you?\nAI: I am an AI created by OpenAI. How can I help you today?"
+openai_key = value = os.getenv("OPENAI_API_KEY")
 
 
 def openai_completion(
@@ -36,7 +37,6 @@ def openai_completion(
 def chatgpt3(
     prompt,
     history,
-    openai_token,
     engine,
     temperature,
     max_tokens,
@@ -65,7 +65,7 @@ def chatgpt3(
     # create the output with openai
     out = openai_completion(
         inp,
-        openai_token,
+        openai_key,
         engine,
         temperature,
         max_tokens,
@@ -81,15 +81,17 @@ with gr.Blocks(title="Chat with GPT-3") as block:
     gr.Markdown("## Chat with GPT-3")
     with gr.Row():
         with gr.Column():
-            openai_token = gr.Textbox(label="OpenAI API Key", value=os.getenv("OPENAI_API_KEY"))
             engine = gr.Dropdown(
                 label="GPT3 Engine",
                 choices=openai_engines,
                 value="text-davinci-003",
             )
-            temperature = gr.Slider(label="Temperature", minimum=0, maximum=1, step=0.1, value=0.9)
-            max_tokens = gr.Slider(label="Max Tokens", minimum=10, maximum=400, step=10, value=150)
-            top_p = gr.Slider(label="Top P", minimum=0, maximum=1, step=0.1, value=1)
+            temperature = gr.Slider(
+                label="Temperature", minimum=0, maximum=1, step=0.1, value=0.9)
+            max_tokens = gr.Slider(
+                label="Max Tokens", minimum=10, maximum=400, step=10, value=150)
+            top_p = gr.Slider(label="Top P", minimum=0,
+                              maximum=1, step=0.1, value=1)
             frequency_penalty = gr.Slider(
                 label="Frequency Penalty",
                 minimum=0,
@@ -107,14 +109,14 @@ with gr.Blocks(title="Chat with GPT-3") as block:
 
         with gr.Column():
             chatbot = gr.Chatbot()
-            message = gr.Textbox(value=prompt, label="Type your question here:")
+            message = gr.Textbox(
+                value=prompt, label="Type your question here:")
             state = gr.State()
             message.submit(
                 fn=chatgpt3,
                 inputs=[
                     message,
                     state,
-                    openai_token,
                     engine,
                     temperature,
                     max_tokens,
@@ -130,7 +132,6 @@ with gr.Blocks(title="Chat with GPT-3") as block:
                 inputs=[
                     message,
                     state,
-                    openai_token,
                     engine,
                     temperature,
                     max_tokens,
