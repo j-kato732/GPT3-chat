@@ -2,42 +2,61 @@ import os
 
 import gradio as gr
 import nltk
-import openai
 
-openai_engines = ["text-davinci-003", "code-davinci-002", "text-curie-001"]
+from llm_manager import FunctionCallableLLMManager
+from todo import add_task, list_tasks, update_task, delete_task
+
+openai_engines = ["gpt-3.5-turbo-0613", "text-davinci-003",
+                  "code-davinci-002", "text-curie-001"]
 prompt = "The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\nHuman: Hello, who are you?\nAI: I am an AI created by OpenAI. How can I help you today?"
-openai_key = value = os.getenv("OPENAI_API_KEY")
+
+
+# def openai_completion(
+#     prompt,
+#     openai_token=None,
+#     engine="text-davinci-003",
+#     temperature=0.9,
+#     max_tokens=150,
+#     top_p=1,
+#     frequency_penalty=0,
+#     presence_penalty=0.6,
+#     stop=[" Human:", " AI:"],
+# ):
+#     openai.api_key = openai_token
+#     response = openai.Completion.create(
+#         engine=engine,
+#         prompt=prompt,
+#         temperature=temperature,
+#         max_tokens=max_tokens,
+#         top_p=top_p,
+#         frequency_penalty=frequency_penalty,
+#         presence_penalty=presence_penalty,
+#         stop=stop,
+#     )
+#     return response.choices[0].text
 
 
 def openai_completion(
     prompt,
-    openai_token=None,
-    engine="text-davinci-003",
-    temperature=0.9,
-    max_tokens=150,
-    top_p=1,
-    frequency_penalty=0,
-    presence_penalty=0.6,
+    llm_manager=None,
     stop=[" Human:", " AI:"],
 ):
-    openai.api_key = openai_token
-    response = openai.Completion.create(
-        engine=engine,
-        prompt=prompt,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        top_p=top_p,
-        frequency_penalty=frequency_penalty,
-        presence_penalty=presence_penalty,
-        stop=stop,
+    response = llm_manager.get_response(
+        prompt,
+        [
+            add_task,
+            list_tasks,
+            update_task,
+            delete_task
+        ]    
     )
-    return response.choices[0].text
+    return response
 
 
 def chatgpt3(
     prompt,
     history,
-    engine,
+    model,
     temperature,
     max_tokens,
     top_p,
@@ -62,17 +81,20 @@ def chatgpt3(
     unique_sentences = [sentences[i] for i in sorted(sentence_dict.values())]
     inp = " ".join(unique_sentences)
 
+    llm_manager = FunctionCallableLLMManager(model, temperature, max_tokens)
+    out = openai_completion(prompt, llm_manager=llm_manager)
+
     # create the output with openai
-    out = openai_completion(
-        inp,
-        openai_key,
-        engine,
-        temperature,
-        max_tokens,
-        top_p,
-        frequency_penalty,
-        presence_penalty,
-    )
+    # out = openai_completion(
+    #     inp,
+    #     openai_key,
+    #     engine,
+    #     temperature,
+    #     max_tokens,
+    #     top_p,
+    #     frequency_penalty,
+    #     presence_penalty,
+    # )
     history.append((inp, out))
     return history, history, ""
 
